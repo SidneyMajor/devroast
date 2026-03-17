@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DevRoast
 
-## Getting Started
+Drop your code. Get roasted — brutally honest feedback powered by AI.
 
-First, run the development server:
+## O que é o DevRoast?
+
+DevRoast é uma aplicação web onde você pode submeter seu código e receber feedback automático e... bem, nada gentil. O app analiza seu código e pointing out every mistake, bad practice, and questionable decision — com muito humor.
+
+É perfeito para:
+- Ver seu código sob uma nova perspectiva (a perspectiva de um crítico implacável)
+- Identificar maus hábitos de programação
+- Se machucar emocionalmente ao ver que seu código está pior que você pensava
+- Competir no leaderboard de pior código da internet
+
+## Recursos
+
+- 📝 **Submissão de Código** — Cole seu código e receba análise instantânea
+- 🔥 **Modo Roast** — Ative para máximo nível de sarcasmo
+- 📊 **Sistema de Score** — De 0 a 10, quão vergonhoso é seu código?
+- 🏆 **Shame Leaderboard** — Veja os piores códigos da internet ranqueados por vergonha
+
+## Feito com
+
+Este projeto foi construído durante o **NLW (Next Level Week)** da [Rocketseat](https://rocketseat.com.br), o maior evento de programação da América Latina.
+
+## Como rodar
 
 ```bash
+# Instale as dependências
+npm install
+
+# Inicie o servidor de desenvolvimento
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Disclaimer
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O DevRoast é feito para fins de entretenimento. Os " feedbacks" são gerados por IA e não devem ser levados ao pé da letra. Código "mal avaliado" não significa que você é um mau desenvolvedor — todo mundo já escreveu código horrível no início. 
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+_keep coding, keep roasting_ 🔥
