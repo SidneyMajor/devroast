@@ -1,34 +1,5 @@
 import { CodeBlock } from "@/components/ui/code-block";
-
-function ScoreRing({ score }: { score: number }) {
-  const getScoreColor = (s: number) => {
-    if (s <= 3.5) return "#EF4444";
-    if (s <= 6) return "#F59E0B";
-    return "#22C55E";
-  };
-
-  const scoreColor = getScoreColor(score);
-  const rotation = -45 + (score / 10) * 270;
-
-  return (
-    <div className="relative h-[180px] w-[180px]">
-      <div className="absolute inset-0 rounded-full border-4 border-[#2A2A2A]" />
-      <div
-        className="absolute inset-0 rounded-full border-4 border-t-transparent border-r-transparent"
-        style={{
-          borderColor: `${scoreColor} ${scoreColor} transparent transparent`,
-          transform: `rotate(${rotation}deg)`,
-        }}
-      />
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-mono text-[48px] font-bold" style={{ color: scoreColor }}>
-          {score}
-        </span>
-        <span className="font-mono text-[16px] text-[#4B5563]">/10</span>
-      </div>
-    </div>
-  );
-}
+import { ScoreRing } from "@/components/ui/score-ring";
 
 function Badge({ label, variant }: { label: string; variant: "critical" | "warning" | "good" }) {
   const colors = {
