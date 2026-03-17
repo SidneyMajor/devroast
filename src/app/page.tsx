@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { CodeEditor } from "@/components/code-editor";
+import { StatsMetrics } from "@/components/ui/stats-metrics";
+import { CodeEditor, MAX_CODE_LENGTH } from "@/components/code-editor";
 import { TableRowRoot, TableRowRank, TableRowScore, TableRowCode, TableRowLanguage } from "@/components/ui/table-row";
 
 export default function Home() {
   const [code, setCode] = useState("");
   const [roastMode, setRoastMode] = useState(true);
+
+  const isOverLimit = code.length > MAX_CODE_LENGTH;
 
   return (
     <div className="flex flex-col items-center px-5 pt-10">
@@ -40,19 +43,11 @@ export default function Home() {
               // maximum sarcasm enabled
             </span>
           </div>
-          <Button>roast_my_code</Button>
+          <Button disabled={isOverLimit || !code.trim()}>roast_my_code</Button>
         </div>
 
         {/* Footer Stats */}
-        <div className="flex items-center justify-center gap-6">
-          <span className="font-[family:var(--font-secondary)] text-xs text-[#6B7280]">
-            2,847 codes roasted
-          </span>
-          <span className="font-mono text-xs text-[#6B7280]">·</span>
-          <span className="font-[family:var(--font-secondary)] text-xs text-[#6B7280]">
-            avg score: 4.2/10
-          </span>
-        </div>
+        <StatsMetrics />
 
         {/* Spacer */}
         <div className="h-[60px]" />
