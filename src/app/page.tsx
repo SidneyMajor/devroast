@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { CodeInput } from "@/components/code-input";
+import { CodeEditor } from "@/components/code-editor";
 import { TableRowRoot, TableRowRank, TableRowScore, TableRowCode, TableRowLanguage } from "@/components/ui/table-row";
 
 export default function Home() {
@@ -25,9 +25,8 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Code Input */}
-        <CodeInput
-          language="javascript"
+        {/* Code Editor */}
+        <CodeEditor
           placeholder="paste your code here..."
           value={code}
           onChange={setCode}
