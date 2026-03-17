@@ -5,6 +5,8 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { twMerge } from "tailwind-merge";
 
+export const MAX_CODE_LENGTH = 2000;
+
 const LANGUAGES = [
   { value: "javascript", label: "JavaScript" },
   { value: "typescript", label: "TypeScript" },
@@ -27,7 +29,7 @@ export interface CodeEditorProps {
   language?: string;
   onLanguageChange?: (language: string) => void;
   placeholder?: string;
-  filename?: string;
+  maxLength?: number;
 }
 
 export function CodeEditor({
@@ -36,12 +38,15 @@ export function CodeEditor({
   language: controlledLanguage,
   onLanguageChange,
   placeholder = "paste your code here...",
+  maxLength = MAX_CODE_LENGTH,
 }: CodeEditorProps) {
   const [internalValue, setInternalValue] = useState("");
 
   const value = controlledValue ?? internalValue;
   const lines = value.split("\n");
   const lineCount = lines.length || 1;
+  const charCount = value.length;
+  const isOverLimit = charCount > maxLength;
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -83,8 +88,8 @@ export function CodeEditor({
           ))}
         </select>
       </div>
-      <div className="flex relative min-h-[320px] max-h-[400px]">
-        <div className="flex flex-col gap-1.5 border-r border-[#2A2A2A] bg-[#0F0F0D] py-3 pr-2 pl-3 text-right select-none">
+      <div className="flex relative h-[360px] overflow-hidden">
+        <div className="flex flex-col gap-1.5 border-r border-[#2A2A2A] bg-[#0F0F0D] py-3 pr-2 pl-3 text-right select-none overflow-y-auto">
           {Array.from({ length: lineCount }, (_, i) => (
             <span key={i} className="font-mono text-[13px] text-[#6B7280] leading-[1.5]">
               {i + 1}
@@ -121,6 +126,12 @@ export function CodeEditor({
             style={{ lineHeight: "1.5" }}
           />
         </div>
+      </div>
+      <div className={twMerge(
+        "flex justify-end px-3 py-1.5 border-t border-[#2A2A2A] font-mono text-xs",
+        isOverLimit ? "text-[#EF4444]" : "text-[#6B7280]"
+      )}>
+        {charCount.toLocaleString()} / {maxLength.toLocaleString()}
       </div>
     </div>
   );

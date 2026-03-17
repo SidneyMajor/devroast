@@ -197,6 +197,7 @@ export default function ComponentsPage() {
 
                         <div className="max-w-lg">
                             <CodeBlock
+                                showHeader
                                 filename="calculate.js"
                                 language="javascript"
                                 code={`function calculateTotal(items) {

@@ -89,10 +89,11 @@ export function CodeBlockContent({ children, className, ...props }: CodeBlockCon
 export interface CodeBlockProps {
   code: string;
   language?: string;
+  showHeader?: boolean;
   filename?: string;
 }
 
-export async function CodeBlock({ code, language = "javascript", filename }: CodeBlockProps) {
+export async function CodeBlock({ code, language = "javascript", showHeader = false, filename }: CodeBlockProps) {
   const highlighted = await codeToHtml(code.trim(), {
     lang: language,
     theme: "vesper",
@@ -100,7 +101,7 @@ export async function CodeBlock({ code, language = "javascript", filename }: Cod
 
   return (
     <CodeBlockRoot>
-      <CodeBlockHeader filename={filename} />
+      {showHeader && <CodeBlockHeader filename={filename} />}
       <div className="flex">
         <CodeBlockLineNumbers lineCount={code.trim().split("\n").length} />
         <CodeBlockContent dangerouslySetInnerHTML={{ __html: highlighted }} />
