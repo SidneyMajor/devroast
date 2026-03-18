@@ -2,11 +2,30 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { StatsMetrics } from "@/components/ui/stats-metrics";
 import { CodeEditor, MAX_CODE_LENGTH } from "@/components/code-editor";
-import { TableRowRoot, TableRowRank, TableRowScore, TableRowCode, TableRowLanguage } from "@/components/ui/table-row";
+import { ShameLeaderboard } from "@/components/ui/shame-leaderboard";
+import { LeaderboardSkeleton } from "@/components/ui/leaderboard-skeleton";
+import { trpc } from "@/trpc/client";
+
+function LeaderboardFooter() {
+  const { data } = trpc.homePageData.useQuery();
+  const total = data?.stats.totalSubmissions ?? 0;
+
+  return (
+    <div className="flex justify-center py-4">
+      <span className="font-[family:var(--font-secondary)] text-xs text-[#6B7280]">
+        showing top 3 of {total.toLocaleString()} ·{" "}
+        <Link href="/leaderboard" className="hover:text-[#FAFAFA] transition-colors">
+          view full leaderboard &gt;&gt;
+        </Link>
+      </span>
+    </div>
+  );
+}
 
 export default function Home() {
   const [code, setCode] = useState("");
@@ -53,47 +72,10 @@ export default function Home() {
         <div className="h-[60px]" />
 
         {/* Leaderboard Preview */}
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-mono text-lg font-bold text-[#FAFAFA]">
-              <span className="text-[#10B981]">//</span> shame_leaderboard
-            </h2>
-            <Link href="/leaderboard" className="font-mono text-xs text-[#6B7280] hover:text-[#FAFAFA] hover:bg-[#2A2A2A] py-1.5 px-3 transition-colors">
-              view_all &gt;&gt;
-            </Link>
-          </div>
-          
-          <p className="font-[family:var(--font-secondary)] text-xs text-[#6B7280]">
-            // the worst code on the internet, ranked by shame
-          </p>
-
-          <div className="rounded-md border border-[#2A2A2A] overflow-hidden">
-            <TableRowRoot>
-              <TableRowRank>#1</TableRowRank>
-              <TableRowScore>1.2</TableRowScore>
-              <TableRowCode>function calculateTotal(items) {'{'} var total = 0; for (var i = 0; i {'<'} items.length; i++) {'{'} total = total + items[i].price; {'}'} return total; {'}'}</TableRowCode>
-              <TableRowLanguage>javascript</TableRowLanguage>
-            </TableRowRoot>
-            <TableRowRoot>
-              <TableRowRank>#2</TableRowRank>
-              <TableRowScore>1.8</TableRowScore>
-              <TableRowCode>var result = ''; for(var i=0; i{'<'}5; i++){'{'} result += i; {'}'} console.log(result);</TableRowCode>
-              <TableRowLanguage>javascript</TableRowLanguage>
-            </TableRowRoot>
-            <TableRowRoot>
-              <TableRowRank>#3</TableRowRank>
-              <TableRowScore>2.1</TableRowScore>
-              <TableRowCode>const sum = (arr) ={'>'} arr.map(x ={'>'} x * 2);</TableRowCode>
-              <TableRowLanguage>javascript</TableRowLanguage>
-            </TableRowRoot>
-          </div>
-
-          <div className="flex justify-center py-4">
-            <span className="font-[family:var(--font-secondary)] text-xs text-[#6B7280]">
-              showing top 3 of 2,847 · <Link href="/leaderboard" className="hover:text-[#FAFAFA] transition-colors">view full leaderboard &gt;&gt;</Link>
-            </span>
-          </div>
-        </div>
+        <Suspense fallback={<LeaderboardSkeleton />}>
+          <ShameLeaderboard />
+          <LeaderboardFooter />
+        </Suspense>
 
         {/* Bottom Spacer */}
         <div className="h-[60px]" />

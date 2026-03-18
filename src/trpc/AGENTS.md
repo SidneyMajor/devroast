@@ -44,6 +44,39 @@ export const appRouter = createTRPCRouter({
 });
 ```
 
+### Queries Paralelas com Promise.all
+
+Quando múltiplas queries são independentes, usar `Promise.all` para executar em paralelo:
+
+```typescript
+export const appRouter = createTRPCRouter({
+  homePageData: baseProcedure.query(async () => {
+    const [statsData, leaderboardData] = await Promise.all([
+      getStats(),
+      getLeaderboard(3),
+    ]);
+
+    return {
+      stats: {
+        totalSubmissions: statsData.totalSubmissions,
+        avgScore: Number(statsData.avgScore),
+      },
+      leaderboard: leaderboardData.rows.map((r) => ({
+        id: r.id,
+        code: r.code,
+        language: r.language,
+        score: Number(r.score),
+      })),
+    };
+  }),
+});
+```
+
+**Por que usar Promise.all?**
+- Reduz tempo de resposta executando queries simultaneamente
+- Queries independentes não dependem uma da outra para executar
+- Melhor performance para páginas com múltiplos dados
+
 ### Mutation
 
 ```typescript

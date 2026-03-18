@@ -20,13 +20,14 @@ export function StatsMetrics() {
         <span className="font-mono text-xs text-[#6B7280]">codes roasted</span>
       </div>
       <span className="font-mono text-xs text-[#6B7280]">·</span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 font-mono text-xs text-[#6B7280]">
+        <span>avg score:</span>
         <NumberFlow
           value={avgScore}
           format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
           className="font-[family:var(--font-secondary)] text-xs text-[#6B7280]"
         />
-        <span className="font-mono text-xs text-[#6B7280]">avg score</span>
+        <span>/10</span>
       </div>
     </div>
   );
