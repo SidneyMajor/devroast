@@ -8,9 +8,14 @@ export const dynamic = "force-static";
 export default async function LeaderboardPage() {
   let data;
 
+  let statsData;
+
   try {
     const caller = await getServerClient();
-    data = await caller.leaderboardFull();
+    [data, statsData] = await Promise.all([
+      caller.leaderboardFull(),
+      caller.stats(),
+    ]);
   } catch (error) {
     return (
       <div className="flex min-h-[calc(100vh-56px)] flex-col gap-10 px-20 py-10">
@@ -36,9 +41,9 @@ export default async function LeaderboardPage() {
         </div>
         <p className="font-mono text-[14px] text-[#6B7280]">// the most roasted code on the internet</p>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[12px] text-[#4B5563]">{data.items.length} submissions</span>
+          <span className="font-mono text-[12px] text-[#4B5563]">{statsData?.totalSubmissions.toLocaleString('en-US') ?? 0} submissions</span>
           <span className="text-[12px] text-[#4B5563]">·</span>
-          <span className="font-mono text-[12px] text-[#4B5563]">avg score: 4.2/10</span>
+          <span className="font-mono text-[12px] text-[#4B5563]">avg score: {statsData?.avgScore.toFixed(1) ?? '0.0'}/10</span>
         </div>
       </div>
 
