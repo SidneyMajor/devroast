@@ -1,0 +1,109 @@
+"use client";
+
+import { CodeBlock } from "@/components/ui/code-block";
+import { ScoreRing } from "@/components/ui/score-ring";
+
+interface AnalysisItem {
+  id: string;
+  severity: "critical" | "warning" | "good";
+  title: string;
+  description: string;
+  order: number;
+}
+
+interface RoastResultProps {
+  roast: {
+    id: string;
+    code: string;
+    language: string;
+    score: number;
+    verdict: string;
+    roastQuote: string;
+    lineCount: number;
+    roastMode: boolean;
+  };
+  analysisItems: AnalysisItem[];
+}
+
+function Badge({ label, variant }: { label: string; variant: "critical" | "warning" | "good" }) {
+  const colors = {
+    critical: "bg-[#EF4444]",
+    warning: "bg-[#F59E0B]",
+    good: "bg-[#22C55E]",
+  };
+  const textColors = {
+    critical: "text-[#EF4444]",
+    warning: "text-[#F59E0B]",
+    good: "text-[#22C55E]",
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`h-2 w-2 rounded-full ${colors[variant]}`} />
+      <span className={`font-mono text-[12px] font-medium ${textColors[variant]}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+export function RoastResult({ roast, analysisItems }: RoastResultProps) {
+  const verdictVariant = roast.score <= 2 ? "critical" : roast.score <= 5 ? "warning" : "good";
+
+  return (
+    <div className="flex min-h-[calc(100vh-56px)] flex-col px-10 py-10">
+      <div className="flex flex-col gap-10">
+        <div className="flex items-center justify-center gap-12">
+          <ScoreRing score={roast.score} />
+
+          <div className="flex flex-1 flex-col gap-4">
+            <Badge label={`verdict: ${roast.verdict}`} variant={verdictVariant} />
+            <h1 className="max-w-xl font-mono text-[20px] font-normal leading-[1.5] text-[#FAFAFA]">
+              &quot;{roast.roastQuote}&quot;
+            </h1>
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-[12px] text-[#4B5563]">lang: {roast.language}</span>
+              <span className="text-[12px] text-[#4B5563]">·</span>
+              <span className="font-mono text-[12px] text-[#4B5563]">{roast.lineCount} lines</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[12px] text-[#6B7280]">
+                {roast.roastMode ? "🔥 roast mode" : "💀 honest mode"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-px w-full bg-[#2A2A2A]" />
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[14px] font-bold text-[#22C55E]">//</span>
+            <h2 className="font-mono text-[14px] font-bold text-[#FAFAFA]">your_submission</h2>
+          </div>
+          <CodeBlock code={roast.code} language={roast.language} />
+        </div>
+
+        <div className="h-px w-full bg-[#2A2A2A]" />
+
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[14px] font-bold text-[#22C55E]">//</span>
+            <h2 className="font-mono text-[14px] font-bold text-[#FAFAFA]">detailed_analysis</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-5">
+            {analysisItems.map((issue) => (
+              <div key={issue.id} className="flex flex-col gap-3 rounded-lg border border-[#2A2A2A] p-5">
+                <div className="flex items-center gap-2">
+                  <Badge label={issue.severity} variant={issue.severity} />
+                </div>
+                <h3 className="font-mono text-[13px] font-medium text-[#FAFAFA]">{issue.title}</h3>
+                <p className="font-mono text-[12px] leading-[1.5] text-[#6B7280]">{issue.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

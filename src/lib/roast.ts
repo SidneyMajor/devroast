@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { roasts, analysisItems } from "@/db/schema";
 import { getRoastDetails } from "@/db/queries";
+import { openai, OPENAI_MODEL, SYSTEM_PROMPTS } from "./openai";
 
 export type RoastIssue = {
   severity: "critical" | "warning" | "good" | "verdict";
@@ -49,6 +50,85 @@ const sampleDiffs: RoastDiff[] = [
   { diffType: "context", content: "}" },
 ];
 
+interface OpenAIAnalysisResponse {
+  feedback: string;
+  score: number;
+  issues: Array<{
+    severity: "critical" | "warning" | "good";
+    title: string;
+    description: string;
+  }>;
+  diff: Array<{
+    type: "removed" | "added" | "context";
+    content: string;
+  }>;
+}
+
+export async function analyzeCodeWithAI(
+  code: string,
+  language: string,
+  roastMode: boolean
+): Promise<GeneratedRoast> {
+  const systemPrompt = roastMode
+    ? SYSTEM_PROMPTS.roast
+    : SYSTEM_PROMPTS.honest;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: OPENAI_MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: `Analyze this ${language} code and return a JSON response with this exact structure:
+{
+  "feedback": "a short witty or constructive comment about the code",
+  "score": a number from 0-10 where 0 is terrible and 10 is perfect,
+  "issues": [
+    {
+      "severity": "critical" or "warning" or "good",
+      "title": "short issue title",
+      "description": "detailed explanation of the issue"
+    }
+  ],
+  "diff": [
+    {
+      "type": "removed" or "added" or "context",
+      "content": "line of code"
+    }
+  ]
+}
+
+Code to analyze:
+${code}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No response from OpenAI");
+    }
+
+    const analysis: OpenAIAnalysisResponse = JSON.parse(content);
+
+    return {
+      feedback: analysis.feedback || "Analysis complete.",
+      score: Math.min(10, Math.max(0, analysis.score || 5)),
+      roastMode,
+      issues: analysis.issues || [],
+      diffs: (analysis.diff || []).map((d) => ({
+        diffType: d.type,
+        content: d.content,
+      })),
+    };
+  } catch (error) {
+    console.error("OpenAI analysis error:", error);
+    throw error;
+  }
+}
+
 function generateMockRoast(code: string, roastMode: boolean): GeneratedRoast {
   const hasVar = code.includes("var ");
   const hasLetConst = code.includes("let ") || code.includes("const ");
@@ -95,7 +175,14 @@ export async function submitCode(
   language: string,
   roastMode: boolean = true
 ) {
-  const generatedRoast = generateMockRoast(code, roastMode);
+  let generatedRoast: GeneratedRoast;
+
+  try {
+    generatedRoast = await analyzeCodeWithAI(code, language, roastMode);
+  } catch (error) {
+    console.warn("OpenAI analysis failed, using mock data:", error);
+    generatedRoast = generateMockRoast(code, roastMode);
+  }
 
   const [roast] = await db.insert(roasts).values({
     code,
@@ -105,6 +192,9 @@ export async function submitCode(
     score: generatedRoast.score,
     verdict: calculateVerdict(generatedRoast.score),
     roastQuote: generatedRoast.feedback,
+    suggestedFix: generatedRoast.diffs
+      .map((d) => `${d.diffType === "removed" ? "-" : d.diffType === "added" ? "+" : " "} ${d.content}`)
+      .join("\n"),
   }).returning();
 
   for (let i = 0; i < generatedRoast.issues.length; i++) {

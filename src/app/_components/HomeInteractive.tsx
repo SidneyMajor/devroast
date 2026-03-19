@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { CodeEditor, MAX_CODE_LENGTH, type Language } from "@/components/code-editor";
+import { useToastContext } from "@/components/ui/toast-provider";
 
 interface HomeInteractiveProps {
   stats: {
@@ -14,10 +16,50 @@ interface HomeInteractiveProps {
 }
 
 export function HomeInteractive({ stats, languages }: HomeInteractiveProps) {
+  const router = useRouter();
   const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("javascript");
   const [roastMode, setRoastMode] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToastContext();
 
   const isOverLimit = code.length > MAX_CODE_LENGTH;
+  const canSubmit = code.trim().length > 0 && !isOverLimit && !isSubmitting;
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          language,
+          roastMode,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to submit");
+      }
+
+      const result = await response.json();
+
+      router.push(`/roast/${result.id}`);
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast({
+        variant: "error",
+        title: "Failed to roast",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center px-5 pt-10">
@@ -36,6 +78,8 @@ export function HomeInteractive({ stats, languages }: HomeInteractiveProps) {
           placeholder="paste your code here..."
           value={code}
           onChange={setCode}
+          language={language}
+          onLanguageChange={setLanguage}
           languages={languages}
         />
 
@@ -46,7 +90,12 @@ export function HomeInteractive({ stats, languages }: HomeInteractiveProps) {
               // maximum sarcasm enabled
             </span>
           </div>
-          <Button disabled={isOverLimit || !code.trim()}>roast_my_code</Button>
+          <Button 
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+          >
+            {isSubmitting ? "roasting..." : "roast_my_code"}
+          </Button>
         </div>
       </div>
     </div>

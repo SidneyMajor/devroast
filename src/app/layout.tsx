@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { JetBrains_Mono, IBM_Plex_Mono } from "next/font/google";
 import { Navbar } from "@/components/navbar";
 import { TRPCReactProvider } from "@/trpc/react-provider";
+import { ToastProvider } from "@/components/ui/toast-provider";
+import { ToastContainer } from "@/components/ui/toast";
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -31,8 +33,11 @@ export default function RootLayout({
         className={`${jetbrainsMono.variable} ${ibmPlexMono.variable} antialiased bg-[#0A0A0A] text-[#FAFAFA] min-h-screen`}
       >
         <TRPCReactProvider>
-          <Navbar />
-          <main>{children}</main>
+          <ToastProvider>
+            <Navbar />
+            <ToastContainer />
+            <main>{children}</main>
+          </ToastProvider>
         </TRPCReactProvider>
       </body>
     </html>
