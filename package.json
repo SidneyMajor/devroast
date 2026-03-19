@@ -29,6 +29,7 @@
     "@trpc/tanstack-react-query": "^11.13.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.39.0",
+    "highlight.js": "^10.7.3",
     "next": "16.1.6",
     "number-flow": "^0.6.0",
     "pg": "^8.11.0",
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.7",
     "@tailwindcss/postcss": "^4",
+    "@types/highlight.js": "^9.12.4",
     "@types/node": "^20",
     "@types/pg": "^8.10.0",
     "@types/react": "^19",

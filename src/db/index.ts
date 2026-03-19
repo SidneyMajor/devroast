@@ -9,6 +9,8 @@ if (!databaseUrl) {
 
 const pool = new pg.Pool({
   connectionString: databaseUrl,
+  connectionTimeoutMillis: 5000,
+  statement_timeout: 10000,
 });
 
 export const db = drizzle(pool, {

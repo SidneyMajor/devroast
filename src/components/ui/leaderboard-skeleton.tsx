@@ -1,3 +1,5 @@
+const SKELETON_WIDTHS = [85, 72, 90, 65, 78, 88, 70, 82] as const;
+
 export function LeaderboardSkeleton() {
   return (
     <div className="flex flex-col rounded-md border border-[#2A2A2A] overflow-hidden">
@@ -18,7 +20,7 @@ export function LeaderboardSkeleton() {
             </div>
             <div className="flex flex-1 flex-col gap-2 p-3">
               {Array.from({ length: 5 }).map((_, j) => (
-                <div key={j} className="h-4 animate-pulse rounded bg-[#2A2A2A]" style={{ width: `${60 + Math.random() * 40}%` }} />
+                <div key={j} className="h-4 animate-pulse rounded bg-[#2A2A2A]" style={{ width: `${SKELETON_WIDTHS[j % SKELETON_WIDTHS.length]}%` }} />
               ))}
             </div>
           </div>

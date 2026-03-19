@@ -1,6 +1,6 @@
 import { db } from "./index";
-import { analysisItems, roasts } from "./schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { analysisItems, languages, roasts } from "./schema";
+import { desc, eq, sql, asc } from "drizzle-orm";
 
 export async function getStats() {
   const result = await db
@@ -51,4 +51,17 @@ export async function getRoastDetails(roastId: string) {
     .orderBy(analysisItems.order, desc(analysisItems.severity));
 
   return { roast, analysisItems: items };
+}
+
+export async function getLanguages() {
+  const items = await db
+    .select({
+      id: languages.id,
+      label: languages.label,
+    })
+    .from(languages)
+    .where(eq(languages.isActive, true))
+    .orderBy(asc(languages.label));
+
+  return items;
 }

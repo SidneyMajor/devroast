@@ -1,6 +1,9 @@
 import { CodeBlock } from "@/components/ui/code-block";
 import { ScoreRing } from "@/components/ui/score-ring";
 
+export const revalidate = 3600;
+export const dynamic = "force-static";
+
 function Badge({ label, variant }: { label: string; variant: "critical" | "warning" | "good" }) {
   const colors = {
     critical: "bg-[#EF4444]",

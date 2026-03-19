@@ -1,5 +1,5 @@
 import { createTRPCRouter, baseProcedure } from "../init";
-import { getStats, getLeaderboard } from "@/db/queries";
+import { getLanguages, getStats, getLeaderboard } from "@/db/queries";
 
 export const appRouter = createTRPCRouter({
   stats: baseProcedure.query(async () => {
@@ -45,6 +45,25 @@ export const appRouter = createTRPCRouter({
         verdict: r.verdict,
       })),
     };
+  }),
+
+  leaderboardFull: baseProcedure.query(async () => {
+    const data = await getLeaderboard(20);
+    return {
+      items: data.map((r) => ({
+        id: r.id,
+        code: r.code,
+        language: r.language,
+        score: Number(r.score),
+        roastMode: r.roastMode,
+        lineCount: r.lineCount,
+        verdict: r.verdict,
+      })),
+    };
+  }),
+
+  languagesList: baseProcedure.query(async () => {
+    return getLanguages();
   }),
 });
 

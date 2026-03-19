@@ -2,9 +2,9 @@ import { faker } from "@faker-js/faker";
 import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { analysisItems, roasts } from "../src/db/schema";
+import { analysisItems, languages, roasts } from "../src/db/schema";
 
-config({ path: ".env.local" });
+config({ path: ".env" });
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -18,23 +18,26 @@ const pool = new Pool({
 
 const db = drizzle(pool, { casing: "snake_case" });
 
-const LANGUAGES = [
-  "javascript",
-  "typescript",
-  "python",
-  "java",
-  "go",
-  "rust",
-  "ruby",
-  "php",
-  "c",
-  "csharp",
-  "swift",
-  "kotlin",
-  "sql",
-  "html",
-  "css",
+const LANGUAGE_DATA = [
+  { id: "javascript", label: "JavaScript" },
+  { id: "typescript", label: "TypeScript" },
+  { id: "python", label: "Python" },
+  { id: "java", label: "Java" },
+  { id: "csharp", label: "C#" },
+  { id: "go", label: "Go" },
+  { id: "rust", label: "Rust" },
+  { id: "php", label: "PHP" },
+  { id: "ruby", label: "Ruby" },
+  { id: "swift", label: "Swift" },
+  { id: "kotlin", label: "Kotlin" },
+  { id: "c", label: "C" },
+  { id: "cpp", label: "C++" },
+  { id: "sql", label: "SQL" },
+  { id: "html", label: "HTML" },
+  { id: "css", label: "CSS" },
 ] as const;
+
+const LANGUAGE_IDS = LANGUAGE_DATA.map((l) => l.id);
 
 const CODE_SNIPPETS: Record<string, string[]> = {
   javascript: [
@@ -73,6 +76,46 @@ for (let i = 0; i < arr.length; i++) {
   const json = await res.json();
   return json;
 }`,
+    `// This is the worst JavaScript code ever written
+// It has 50+ lines of terrible code
+var data = [];
+var result = [];
+var total = 0;
+var count = 0;
+var average = 0;
+var min = 0;
+var max = 0;
+var sum = 0;
+for (var i = 0; i < data.length; i++) {
+  if (data[i] != null) {
+    if (data[i].value != undefined) {
+      result[count] = data[i].value;
+      count = count + 1;
+    }
+  }
+}
+for (var j = 0; j < result.length; j++) {
+  total = total + result[j];
+  if (result[j] < min) {
+    min = result[j];
+  }
+  if (result[j] > max) {
+    max = result[j];
+  }
+}
+average = total / count;
+// Another loop for no reason
+for (var k = 0; k < 100; k++) {
+  console.log("iteration " + k);
+  sum = sum + k;
+}
+// Yet another loop
+for (var l = 0; l < result.length; l++) {
+  if (result[l] > average) {
+    console.log("above average: " + result[l]);
+  }
+}
+return { total: total, average: average, min: min, max: max, count: count };`,
   ],
   typescript: [
     `const data: any = fetchData();
@@ -439,6 +482,16 @@ async function seed() {
   await db.delete(analysisItems);
   await db.delete(roasts);
 
+  console.log("Seeding languages...");
+  await db.delete(languages);
+  await db.insert(languages).values(
+    LANGUAGE_DATA.map((lang) => ({
+      id: lang.id,
+      label: lang.label,
+      isActive: true,
+    }))
+  );
+
   console.log("Seeding database with 100 roasts...");
 
   // Weight scores toward lower values for a more interesting leaderboard
@@ -455,7 +508,7 @@ async function seed() {
   let totalItems = 0;
 
   for (const score of scores) {
-    const language = faker.helpers.arrayElement(LANGUAGES);
+    const language = faker.helpers.arrayElement(LANGUAGE_IDS);
     const code = getCodeForLanguage(language);
     const lineCount = code.split("\n").length;
     const verdict = getVerdict(score);

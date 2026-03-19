@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     const leaderboard = await getLeaderboard(clampedLimit);
 
-    return NextResponse.json(leaderboard.rows);
+    return NextResponse.json(leaderboard);
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
     return NextResponse.json(

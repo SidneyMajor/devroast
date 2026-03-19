@@ -49,7 +49,15 @@ export const analysisItems = pgTable("analysis_items", {
   order: integer().notNull(),
 });
 
+export const languages = pgTable("languages", {
+  id: varchar({ length: 50 }).primaryKey(),
+  label: varchar({ length: 100 }).notNull(),
+  isActive: boolean().default(true).notNull(),
+});
+
 export type Roast = typeof roasts.$inferSelect;
 export type NewRoast = typeof roasts.$inferInsert;
 export type AnalysisItem = typeof analysisItems.$inferSelect;
 export type NewAnalysisItem = typeof analysisItems.$inferInsert;
+export type Language = typeof languages.$inferSelect;
+export type NewLanguage = typeof languages.$inferInsert;

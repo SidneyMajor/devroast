@@ -1,11 +1,6 @@
-import {
-  createSubmission,
-  createRoast,
-  createIssue,
-  createDiff,
-  getFullRoastData,
-  updateStats,
-} from "@/db/queries";
+import { db } from "@/db";
+import { roasts, analysisItems } from "@/db/schema";
+import { getRoastDetails } from "@/db/queries";
 
 export type RoastIssue = {
   severity: "critical" | "warning" | "good" | "verdict";
@@ -87,33 +82,41 @@ function generateMockRoast(code: string, roastMode: boolean): GeneratedRoast {
   };
 }
 
+function calculateVerdict(score: number): "needs_serious_help" | "rough_around_edges" | "decent_code" | "solid_work" | "exceptional" {
+  if (score <= 2) return "needs_serious_help";
+  if (score <= 4) return "rough_around_edges";
+  if (score <= 6) return "decent_code";
+  if (score <= 8) return "solid_work";
+  return "exceptional";
+}
+
 export async function submitCode(
   code: string,
   language: string,
   roastMode: boolean = true
 ) {
-  const submission = await createSubmission(code, language);
-
   const generatedRoast = generateMockRoast(code, roastMode);
 
-  const roast = await createRoast(
-    submission.id,
-    generatedRoast.feedback,
-    generatedRoast.score,
-    generatedRoast.roastMode
-  );
+  const [roast] = await db.insert(roasts).values({
+    code,
+    language,
+    lineCount: code.split("\n").length,
+    roastMode,
+    score: generatedRoast.score,
+    verdict: calculateVerdict(generatedRoast.score),
+    roastQuote: generatedRoast.feedback,
+  }).returning();
 
-  for (const issue of generatedRoast.issues) {
-    await createIssue(roast.id, issue.severity, issue.title, issue.description);
+  for (let i = 0; i < generatedRoast.issues.length; i++) {
+    const issue = generatedRoast.issues[i];
+    await db.insert(analysisItems).values({
+      roastId: roast.id,
+      severity: issue.severity === "verdict" ? "warning" : issue.severity as "critical" | "warning" | "good",
+      title: issue.title,
+      description: issue.description,
+      order: i,
+    });
   }
 
-  for (const diff of generatedRoast.diffs) {
-    await createDiff(roast.id, diff.diffType, diff.content);
-  }
-
-  await updateStats();
-
-  const fullData = await getFullRoastData(submission.id);
-
-  return fullData;
+  return getRoastDetails(roast.id);
 }
