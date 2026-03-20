@@ -69,26 +69,43 @@ function Badge({ label, variant }: { label: string; variant: "critical" | "warni
 
 function ShareButton({ roastId }: { roastId: string }) {
   const [copied, setCopied] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleShare = async () => {
-    const ogImageUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/og?id=${roastId}`;
+    const ogImageUrl = `${window.location.origin}/api/og?id=${roastId}`;
     try {
       await navigator.clipboard.writeText(ogImageUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setShowPreview(true);
+      setTimeout(() => {
+        setCopied(false);
+        setShowPreview(false);
+      }, 3000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
   };
 
   return (
-    <button
-      onClick={handleShare}
-      className="flex items-center gap-2 border border-[#2A2A2A] px-4 py-2 font-mono text-[12px] text-[#FAFAFA] transition-colors hover:border-[#4B5563]"
-    >
-      <span className="text-[#22C55E]">$</span>
-      <span>{copied ? "copied!" : "share_roast"}</span>
-    </button>
+    <div className="relative">
+      <button
+        onClick={handleShare}
+        className="flex items-center gap-2 border border-[#2A2A2A] px-4 py-2 font-mono text-[12px] text-[#FAFAFA] transition-colors hover:border-[#4B5563]"
+      >
+        <span className="text-[#22C55E]">$</span>
+        <span>{copied ? "copied!" : "share_roast"}</span>
+      </button>
+      
+      {showPreview && (
+        <div className="absolute left-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-[#2A2A2A] shadow-xl">
+          <img
+            src={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/og?id=${roastId}`}
+            alt="OG Preview"
+            className="w-[300px] object-cover"
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
