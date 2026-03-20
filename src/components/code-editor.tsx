@@ -101,10 +101,15 @@ export function CodeEditor({
       const detected = doDetectLanguage(value);
       if (detected) {
         setCurrentLanguage(detected);
-        onLanguageChange?.(detected);
       }
     }
-  }, [value, isAutoDetected, onLanguageChange]);
+  }, [value, isAutoDetected]);
+
+  useEffect(() => {
+    if (controlledLanguage === "auto") {
+      setIsAutoDetected(true);
+    }
+  }, [controlledLanguage]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -121,11 +126,14 @@ export function CodeEditor({
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const newLang = e.target.value;
       if (newLang === "auto") {
+        setIsAutoDetected(true);
         const detected = doDetectLanguage(value);
         if (detected) {
           setCurrentLanguage(detected);
-          setIsAutoDetected(true);
-          onLanguageChange?.(detected);
+          onLanguageChange?.("auto");
+        } else {
+          setCurrentLanguage("auto");
+          onLanguageChange?.("auto");
         }
       } else {
         setCurrentLanguage(newLang);

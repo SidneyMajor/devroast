@@ -18,7 +18,7 @@ interface HomeInteractiveProps {
 export function HomeInteractive({ stats, languages }: HomeInteractiveProps) {
   const router = useRouter();
   const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("javascript");
+  const [language, setLanguage] = useState("auto");
   const [roastMode, setRoastMode] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToastContext();
