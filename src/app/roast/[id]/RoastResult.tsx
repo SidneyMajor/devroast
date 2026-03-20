@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DiffBlock, type DiffLine } from "@/components/ui/diff-block";
 import { ScoreRing } from "@/components/ui/score-ring";
@@ -66,6 +67,30 @@ function Badge({ label, variant }: { label: string; variant: "critical" | "warni
   );
 }
 
+function ShareButton({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleShare}
+      className="flex items-center gap-2 border border-[#2A2A2A] px-4 py-2 font-mono text-[12px] text-[#FAFAFA] transition-colors hover:border-[#4B5563]"
+    >
+      <span className="text-[#22C55E]">$</span>
+      <span>{copied ? "copied!" : "share_roast"}</span>
+    </button>
+  );
+}
+
 export function RoastResult({ roast, analysisItems }: RoastResultProps) {
   const verdictVariant = roast.score <= 2 ? "critical" : roast.score <= 5 ? "warning" : "good";
 
@@ -89,6 +114,9 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
               <span className="font-mono text-[12px] text-[#6B7280]">
                 {roast.roastMode ? "🔥 roast mode" : "💀 honest mode"}
               </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <ShareButton url={`${typeof window !== 'undefined' ? window.location.origin : ''}/roast/${roast.id}`} />
             </div>
           </div>
         </div>
