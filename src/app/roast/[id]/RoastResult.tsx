@@ -67,12 +67,13 @@ function Badge({ label, variant }: { label: string; variant: "critical" | "warni
   );
 }
 
-function ShareButton({ url }: { url: string }) {
+function ShareButton({ roastId }: { roastId: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
+    const ogImageUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/og?id=${roastId}`;
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(ogImageUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -116,7 +117,7 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <ShareButton url={`${typeof window !== 'undefined' ? window.location.origin : ''}/roast/${roast.id}`} />
+              <ShareButton roastId={roast.id} />
             </div>
           </div>
         </div>
