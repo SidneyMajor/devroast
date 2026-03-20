@@ -119,13 +119,15 @@ export function RoastCard({
         </span>
       </div>
 
-      <CodeBlock
-        code={codePreview}
-        language={language === "auto" ? "javascript" : language}
-        showHeader
-        filename={fileLabel}
-        maxHeight="110px"
-      />
+      <div className="hidden w-full md:block">
+        <CodeBlock
+          code={codePreview}
+          language={language === "auto" ? "javascript" : language}
+          showHeader
+          filename={fileLabel}
+          maxHeight="96px"
+        />
+      </div>
 
       <Link
         href={`/roast/${id}`}

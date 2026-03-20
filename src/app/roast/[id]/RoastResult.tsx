@@ -32,18 +32,14 @@ interface RoastResultProps {
 function parseDiff(diffText: string | null | undefined): DiffLine[] {
   if (!diffText) return [];
 
-  return diffText
-    .split("\n")
-    .filter((line) => line.trim())
-    .map((line) => {
-      if (line.startsWith("- ") || line.startsWith("-")) {
-        return { diffType: "removed" as const, content: line.slice(2) || line.slice(1) };
-      }
-      if (line.startsWith("+ ") || line.startsWith("+")) {
-        return { diffType: "added" as const, content: line.slice(2) || line.slice(1) };
-      }
-      return { diffType: "context" as const, content: line.slice(2) || line };
-    });
+  return diffText.split("\n").map((line) => {
+    const prefix = line[0];
+    const rest = line.slice(1);
+    if (prefix === "+") return { diffType: "added" as const, content: rest };
+    if (prefix === "-") return { diffType: "removed" as const, content: rest };
+    if (prefix === " ") return { diffType: "context" as const, content: rest };
+    return { diffType: "context" as const, content: line };
+  });
 }
 
 function ShareButton({ roastId }: { roastId: string }) {
@@ -115,6 +111,8 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
         : "good";
 
   const verdictLabel = roast.verdict.replace(/_/g, " ");
+  const parsedDiff = parseDiff(roast.suggestedFix);
+  const hasStructuredDiff = parsedDiff.some((l) => l.diffType !== "context" || l.content.trim().startsWith("+") || l.content.trim().startsWith("-"));
 
   return (
     <div className="flex min-h-[calc(100vh-56px)] flex-col items-center px-5 py-10">
@@ -193,10 +191,20 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
             <span className="font-mono text-[14px] font-bold text-[#22C55E]">//</span>
             <h2 className="font-mono text-[14px] font-bold text-[#FAFAFA]">suggested_fix</h2>
           </div>
-          <DiffBlock
-            lines={parseDiff(roast.suggestedFix)}
-            filename={`${roast.language}: code → improved`}
-          />
+          {hasStructuredDiff ? (
+            <DiffBlock
+              lines={parsedDiff}
+              filename={`${roast.language}: code → improved`}
+            />
+          ) : (
+            <CodeBlock
+              code={roast.suggestedFix || "no suggestions available"}
+              language={roast.language}
+              showHeader
+              filename={`${roast.language}: code → improved`}
+              maxHeight="424px"
+            />
+          )}
         </div>
       </div>
     </div>

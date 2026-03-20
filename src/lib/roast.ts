@@ -40,27 +40,31 @@ function parseDiffFromResponse(diff: unknown): RoastDiff[] {
       .filter((d: any) => d && d.type && d.content)
       .map((d: { type: string; content: string }) => ({
         diffType: d.type as "added" | "removed" | "context",
-        content: d.content,
+        content: normalizeDiffLine(d.content, d.type),
       }));
   }
   
   if (typeof diff === "string") {
     const lines = diff.split("\n");
     return lines
-      .filter((line) => line.startsWith("+") || line.startsWith("-") || line.startsWith(" "))
+      .filter((line) => line.trim().length > 0)
       .map((line) => {
-        const content = line.slice(1).trimEnd();
-        if (line.startsWith("+")) {
-          return { diffType: "added" as const, content };
-        }
-        if (line.startsWith("-")) {
-          return { diffType: "removed" as const, content };
-        }
-        return { diffType: "context" as const, content };
+        const prefix = line[0];
+        const rest = line.length > 0 ? line.slice(1) : "";
+        if (prefix === "+") return { diffType: "added" as const, content: rest };
+        if (prefix === "-") return { diffType: "removed" as const, content: rest };
+        if (prefix === " ") return { diffType: "context" as const, content: rest };
+        // fallback: treat as context with original text
+        return { diffType: "context" as const, content: line };
       });
   }
   
   return [];
+}
+
+function normalizeDiffLine(content: string, type: string): string {
+  if (type === "added" || type === "removed" || type === "context") return content;
+  return content;
 }
 
 interface OpenAIAnalysisResponse {
@@ -96,11 +100,17 @@ export async function analyzeCodeWithAI(
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Analyze this ${language} code and return ONLY valid JSON:
+          content: `Analyze this ${language} code and return ONLY valid JSON.
 
+Code:
 ${code}
 
-Return this exact JSON structure:
+STRICT FORMAT:
+- JSON fields: feedback (string), score (number 0-10), issues (array of {severity,title,description}), diff (array of lines).
+- diff MUST be a unified diff: each line starts with "+" for additions, "-" for removals, or " " (space) for context. No other prefixes. One logical line per original line, no wrapping or commentary.
+- Do NOT include code fences or extra text outside JSON.
+
+Return exactly:
 {"feedback":"...","score":5,"issues":[{"severity":"warning","title":"...","description":"..."}],"diff":[{"type":"removed","content":"..."},{"type":"added","content":"..."}]}`,
         },
       ],
