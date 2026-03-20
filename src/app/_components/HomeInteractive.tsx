@@ -49,7 +49,7 @@ export function HomeInteractive({ stats, languages }: HomeInteractiveProps) {
 
       const result = await response.json();
 
-      router.push(`/roast/${result.id}`);
+      router.push(`/roast/${result.roast.id}`);
     } catch (error) {
       console.error("Submit error:", error);
       toast({

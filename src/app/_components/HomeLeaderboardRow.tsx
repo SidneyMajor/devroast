@@ -36,7 +36,7 @@ export function HomeLeaderboardRow({
   return (
     <div className="flex flex-col rounded-md border border-[#2A2A2A] bg-[#0A0A0A] overflow-hidden">
       <Link
-        href={`/roast/${rank}`}
+        href={`/roast/${id}`}
         className="flex h-10 items-center justify-between border-b border-[#2A2A2A] px-4 transition-colors hover:bg-[#111111]"
       >
         <div className="flex items-center gap-4">

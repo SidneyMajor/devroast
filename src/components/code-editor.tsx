@@ -97,15 +97,14 @@ export function CodeEditor({
   );
 
   useEffect(() => {
-    if (!controlledLanguage && value && value.length > 20) {
+    if (value && value.length > 20 && isAutoDetected) {
       const detected = doDetectLanguage(value);
       if (detected) {
         setCurrentLanguage(detected);
-        setIsAutoDetected(true);
         onLanguageChange?.(detected);
       }
     }
-  }, [value, controlledLanguage, onLanguageChange]);
+  }, [value, isAutoDetected, onLanguageChange]);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
