@@ -83,7 +83,24 @@ export interface RoastsPaginatedResult {
 }
 
 export async function getRoastsPaginated(cursor: string | null, limit: number): Promise<RoastsPaginatedResult> {
-  const cursorCondition = cursor ? sql`${roasts.createdAt} < (SELECT createdAt FROM ${roasts} WHERE id = ${cursor})` : undefined;
+  let cursorDate: Date | null = null;
+
+  if (cursor) {
+    const cursorRow = await db
+      .select({ createdAt: roasts.createdAt })
+      .from(roasts)
+      .where(eq(roasts.id, cursor))
+      .limit(1);
+
+    cursorDate = cursorRow[0]?.createdAt ?? null;
+  }
+
+  const cursorCondition = cursorDate
+    ? sql`(
+        ${roasts.createdAt} < ${cursorDate}
+        OR (${roasts.createdAt} = ${cursorDate} AND ${roasts.id} < ${cursor})
+      )`
+    : undefined;
 
   const items = await db
     .select({
@@ -98,7 +115,7 @@ export async function getRoastsPaginated(cursor: string | null, limit: number): 
     })
     .from(roasts)
     .where(cursorCondition ? sql`${cursorCondition}` : undefined)
-    .orderBy(desc(roasts.createdAt))
+    .orderBy(desc(roasts.createdAt), desc(roasts.id))
     .limit(limit + 1);
 
   const hasMore = items.length > limit;

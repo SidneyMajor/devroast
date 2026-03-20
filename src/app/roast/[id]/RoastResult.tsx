@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DiffBlock, type DiffLine } from "@/components/ui/diff-block";
 import { ScoreRing } from "@/components/ui/score-ring";
+import { Badge } from "@/components/ui/badge";
 
 interface AnalysisItem {
   id: string;
@@ -30,7 +31,7 @@ interface RoastResultProps {
 
 function parseDiff(diffText: string | null | undefined): DiffLine[] {
   if (!diffText) return [];
-  
+
   return diffText
     .split("\n")
     .filter((line) => line.trim())
@@ -43,28 +44,6 @@ function parseDiff(diffText: string | null | undefined): DiffLine[] {
       }
       return { diffType: "context" as const, content: line.slice(2) || line };
     });
-}
-
-function Badge({ label, variant }: { label: string; variant: "critical" | "warning" | "good" }) {
-  const colors = {
-    critical: "bg-[#EF4444]",
-    warning: "bg-[#F59E0B]",
-    good: "bg-[#22C55E]",
-  };
-  const textColors = {
-    critical: "text-[#EF4444]",
-    warning: "text-[#F59E0B]",
-    good: "text-[#22C55E]",
-  };
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className={`h-2 w-2 rounded-full ${colors[variant]}`} />
-      <span className={`font-mono text-[12px] font-medium ${textColors[variant]}`}>
-        {label}
-      </span>
-    </div>
-  );
 }
 
 function ShareButton({ roastId }: { roastId: string }) {
@@ -96,10 +75,10 @@ function ShareButton({ roastId }: { roastId: string }) {
         <span className="text-[#22C55E]">$</span>
         <span>{copied ? "copied!" : "share_roast"}</span>
       </button>
-      
+
       {showPreview && (
         <>
-          <div 
+          <div
             className="fixed inset-0 z-50 bg-black/70"
             onClick={closePreview}
           />
@@ -112,7 +91,7 @@ function ShareButton({ roastId }: { roastId: string }) {
               />
               <div className="flex items-center justify-between bg-[#0A0A0A] p-3">
                 <span className="font-mono text-[12px] text-[#22C55E]">$ copied!</span>
-                <button 
+                <button
                   onClick={closePreview}
                   className="font-mono text-[12px] text-[#6B7280] transition-colors hover:text-white"
                 >
@@ -128,31 +107,51 @@ function ShareButton({ roastId }: { roastId: string }) {
 }
 
 export function RoastResult({ roast, analysisItems }: RoastResultProps) {
-  const verdictVariant = roast.score <= 2 ? "critical" : roast.score <= 5 ? "warning" : "good";
+  const verdictVariant =
+    roast.verdict === "needs_serious_help"
+      ? "critical"
+      : roast.verdict === "rough_around_edges"
+        ? "warning"
+        : "good";
+
+  const verdictLabel = roast.verdict.replace(/_/g, " ");
 
   return (
-    <div className="flex min-h-[calc(100vh-56px)] flex-col px-10 py-10">
-      <div className="flex flex-col gap-10">
-        <div className="flex items-center justify-center gap-12">
-          <ScoreRing score={roast.score} />
+    <div className="flex min-h-[calc(100vh-56px)] flex-col items-center px-5 py-10">
+      <div className="flex w-full max-w-[980px] flex-col gap-12">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[14px] font-bold text-[#10B981]">//</span>
+            <h1 className="font-mono text-[20px] font-bold text-[#FAFAFA]">roast_details</h1>
+          </div>
 
-          <div className="flex flex-1 flex-col gap-4">
-            <Badge label={`verdict: ${roast.verdict}`} variant={verdictVariant} />
-            <h1 className="max-w-xl font-mono text-[20px] font-normal leading-[1.5] text-[#FAFAFA]">
-              &quot;{roast.roastQuote}&quot;
-            </h1>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-[12px] text-[#4B5563]">lang: {roast.language}</span>
-              <span className="text-[12px] text-[#4B5563]">·</span>
-              <span className="font-mono text-[12px] text-[#4B5563]">{roast.lineCount} lines</span>
+          <div className="flex flex-col gap-10 rounded-lg border border-[#1F1F1F] bg-[radial-gradient(circle_at_50%_45%,#111111_0%,#0f172a_40%,#0a0a0a_100%)] p-6 md:flex-row md:items-center md:justify-between md:gap-12">
+            <div className="flex items-center justify-center md:flex-shrink-0 md:pr-4">
+              <ScoreRing score={roast.score} size={160} />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[12px] text-[#6B7280]">
-                {roast.roastMode ? "🔥 roast mode" : "💀 honest mode"}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <ShareButton roastId={roast.id} />
+
+            <div className="flex min-w-0 flex-1 flex-col gap-5 md:max-w-[640px]">
+              <Badge variant={verdictVariant} size="md" className="truncate" title={roast.verdict}>
+                {verdictLabel}
+              </Badge>
+              <p className="max-w-xl text-justify font-mono text-[18px] font-normal leading-[1.7] text-[#FAFAFA]">
+                &quot;{roast.roastQuote}&quot;
+              </p>
+              <div className="flex items-center gap-4">
+                <span className="font-mono text-[12px] text-[#4B5563]">lang: {roast.language}</span>
+                <span className="text-[12px] text-[#4B5563]">·</span>
+                <span className="font-mono text-[12px] text-[#4B5563]">{roast.lineCount} lines</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[12px] text-[#6B7280]">
+                  {roast.roastMode ? "🔥 roast mode" : "💎 honest mode"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Suspense fallback={<span className="font-mono text-[12px] text-[#6B7280]">loading share...</span>}>
+                  <ShareButton roastId={roast.id} />
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
@@ -174,7 +173,7 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
             <span className="font-mono text-[14px] font-bold text-[#22C55E]">//</span>
             <h2 className="font-mono text-[14px] font-bold text-[#FAFAFA]">detailed_analysis</h2>
           </div>
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {analysisItems.map((issue) => (
               <div key={issue.id} className="flex flex-col gap-3 rounded-lg border border-[#2A2A2A] p-5">
                 <div className="flex items-center gap-2">
@@ -194,8 +193,8 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
             <span className="font-mono text-[14px] font-bold text-[#22C55E]">//</span>
             <h2 className="font-mono text-[14px] font-bold text-[#FAFAFA]">suggested_fix</h2>
           </div>
-          <DiffBlock 
-            lines={parseDiff(roast.suggestedFix)} 
+          <DiffBlock
+            lines={parseDiff(roast.suggestedFix)}
             filename={`${roast.language}: code → improved`}
           />
         </div>

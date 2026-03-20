@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { highlightDiffLines } from "@/lib/shiki-highlighter";
 
@@ -30,7 +33,7 @@ const diffStyles = {
   },
 };
 
-async function DiffLineComponent({
+function DiffLineComponent({
   line,
   lineNumber,
 }: {
@@ -55,27 +58,41 @@ async function DiffLineComponent({
         {prefix}
       </span>
       <span
-        className="flex-1 font-mono text-[13px] text-[#E1E4E8] whitespace-pre"
+        className="flex-1 whitespace-pre font-mono text-[13px] text-[#E1E4E8]"
         dangerouslySetInnerHTML={{ __html: line.html }}
       />
     </div>
   );
 }
 
-export async function DiffBlock({
+export function DiffBlock({
   lines,
   filename,
   language = "javascript",
 }: DiffBlockProps) {
   const displayFilename = filename || "suggested_fix.diff";
+  const [highlightedLines, setHighlightedLines] = useState<
+    { diffType: "added" | "removed" | "context"; html: string }[]
+  >([]);
 
-  const highlightedLines =
-    lines.length > 0
-      ? await highlightDiffLines(lines, language)
-      : [];
+  useEffect(() => {
+    let active = true;
+    async function run() {
+      if (lines.length === 0) {
+        setHighlightedLines([]);
+        return;
+      }
+      const result = await highlightDiffLines(lines, language);
+      if (active) setHighlightedLines(result);
+    }
+    run();
+    return () => {
+      active = false;
+    };
+  }, [lines, language]);
 
   return (
-    <div className="flex flex-col rounded-md border border-[#30363D] bg-[#0D1117] overflow-hidden">
+    <div className="flex flex-col overflow-hidden rounded-md border border-[#30363D] bg-[#0D1117]">
       <div className="flex h-10 items-center gap-3 border-b border-[#30363D] px-4">
         <span className="h-2.5 w-2.5 rounded-full bg-[#DA3633]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />

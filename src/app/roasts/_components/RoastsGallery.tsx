@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { trpc } from "@/trpc/client";
 import { RoastCard } from "@/components/ui/roast-card";
 
@@ -21,43 +21,39 @@ interface RoastsGalleryProps {
 }
 
 export function RoastsGallery({ initialRoasts, initialCursor }: RoastsGalleryProps) {
-  const [roasts, setRoasts] = useState<RoastListItem[]>(initialRoasts);
-  const [cursor, setCursor] = useState<string | null>(initialCursor);
-  const [hasMore, setHasMore] = useState(!!initialCursor);
-  
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
-  const loadMore = trpc.roastsList.useQuery(
-    { cursor: cursor ?? undefined, limit: 15 },
-    { enabled: !!cursor && !loadingRef.current }
+  const roastsQuery = trpc.roastsList.useInfiniteQuery(
+    { limit: 15 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      initialData: {
+        pages: [{ items: initialRoasts, nextCursor: initialCursor }],
+        pageParams: [undefined],
+      },
+      refetchOnWindowFocus: false,
+      retry: false,
+    }
   );
 
-  const loadMoreRoasts = useCallback(() => {
-    if (loadingRef.current || !cursor) return;
-    loadingRef.current = true;
-  }, [cursor]);
+  const roasts = useMemo(
+    () => roastsQuery.data?.pages.flatMap((p) => p.items) ?? initialRoasts,
+    [roastsQuery.data?.pages, initialRoasts]
+  );
 
-  useEffect(() => {
-    if (!loadMore.data || loadMore.isFetching) return;
-
-    if (loadMore.data.items.length > 0) {
-      setRoasts((prev) => [...prev, ...loadMore.data.items]);
-      setCursor(loadMore.data.nextCursor);
-      setHasMore(!!loadMore.data.nextCursor);
-    } else {
-      setHasMore(false);
-    }
-    loadingRef.current = false;
-  }, [loadMore.data, loadMore.isFetching]);
+  const hasMore = roastsQuery.hasNextPage ?? false;
 
   useEffect(() => {
     if (!hasMore || loadingRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && cursor && !loadingRef.current) {
-          loadMore.refetch();
+        if (entries[0].isIntersecting && !loadingRef.current) {
+          loadingRef.current = true;
+          roastsQuery.fetchNextPage().finally(() => {
+            loadingRef.current = false;
+          });
         }
       },
       { threshold: 0.1 }
@@ -68,7 +64,7 @@ export function RoastsGallery({ initialRoasts, initialCursor }: RoastsGalleryPro
     }
 
     return () => observer.disconnect();
-  }, [hasMore, cursor, loadMore]);
+  }, [hasMore, roastsQuery]);
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -80,7 +76,7 @@ export function RoastsGallery({ initialRoasts, initialCursor }: RoastsGalleryPro
 
       {hasMore && (
         <div ref={loadMoreRef} className="flex items-center justify-center py-8">
-          {loadMore.isFetching ? (
+          {roastsQuery.isFetchingNextPage ? (
             <span className="font-mono text-[14px] text-[#6B7280]">Loading more...</span>
           ) : (
             <span className="font-mono text-[14px] text-[#6B7280]">Scroll for more</span>

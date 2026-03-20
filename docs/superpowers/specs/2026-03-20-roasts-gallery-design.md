@@ -5,7 +5,7 @@ Create a public gallery page displaying all roasts in a card layout with infinit
 
 ## URL
 - `/roasts` - Gallery page (Server Component)
-- `/roasts/[id]` - Existing roast result page
+- `/roast/[id]` - Existing roast result page (singular)
 
 ## Components
 
@@ -46,10 +46,13 @@ Create a public gallery page displaying all roasts in a card layout with infinit
 ```
 
 **Details:**
-- Score ring: 160px with gradient arc
-- Verdict badge: colored by severity (critical=red, warning=amber, good=green)
+- Score ring: 180px with gradient arc (reuse existing ScoreRing component)
+- Verdict: Display verdict string as badge with color mapping:
+  - `needs_serious_help` → red (#EF4444)
+  - `rough_around_edges` → amber (#F59E0B)
+  - `decent_code` / `solid_work` / `exceptional` → green (#10B981)
 - Code preview: max 5 lines with syntax highlighting
-- CTA button: "View roast" → links to `/roasts/[id]`
+- CTA button: "View roast" → use Next.js `<Link>` component with Button styling
 
 ## Data Flow
 
@@ -87,11 +90,19 @@ roastsList: baseProcedure
 - Use Suspense with skeleton component for initial load
 - Show "Loading more..." indicator for pagination
 
+### Null Handling
+- `roastQuote` (optional): Show "No roast quote available" placeholder if null
+- Use `|| "No roast quote available"` fallback
+
 ## Implementation Steps
 
 1. Add `roastsList` tRPC procedure with cursor pagination
-2. Create `getRoastsPaginated` query function
-3. Create `RoastCard` component using existing UI components
+2. Create `getRoastsPaginated` query function in `src/db/queries.ts`
+3. Create `RoastCard` component:
+   - Use ScoreRing for score display
+   - Use CardRoot/CardBadge for structure
+   - Use CodeBlock for code preview (max 5 lines, no header)
+   - Use Next.js `<Link>` with Button styling for CTA
 4. Create `RoastsGallery` client component with infinite scroll
 5. Create `src/app/roasts/page.tsx` (Server Component)
 6. Add navigation link to navbar
@@ -99,7 +110,7 @@ roastsList: baseProcedure
 ## Acceptance Criteria
 - [ ] Page loads at `/roasts` with 15 roasts initially
 - [ ] Cards display: score, title, verdict, quote, tags, code preview
-- [ ] Clicking "View roast" navigates to `/roasts/[id]`
+- [ ] Clicking "View roast" navigates to `/roast/[id]`
 - [ ] Scrolling to bottom loads 15 more roasts
 - [ ] Loading states shown during data fetch
 - [ ] Ordered by most recent first
