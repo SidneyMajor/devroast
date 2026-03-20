@@ -130,11 +130,13 @@ function CodeBlockContentInner({ code, language }: { code: string; language: str
 
 export function CodeBlock({ 
   code, 
-  language = "javascript", 
+  language: languageProp = "javascript", 
   showHeader = false, 
   filename,
   maxHeight 
 }: CodeBlockProps) {
+  const language = languageProp === "auto" ? "javascript" : languageProp;
+
   return (
     <CodeBlockRoot className={maxHeight ? "overflow-hidden" : undefined}>
       {showHeader && <CodeBlockHeader filename={filename} />}

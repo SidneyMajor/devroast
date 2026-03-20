@@ -63,9 +63,9 @@ export function RoastCard({
   const codePreview = getCodePreview(code, 5);
 
   return (
-    <CardRoot className="w-full max-w-[520px] gap-4 p-5">
-      <div className="flex items-start gap-4">
-        <ScoreRing score={score} className="flex-shrink-0" />
+    <CardRoot className="w-full max-w-[470px] gap-3 p-4">
+      <div className="flex items-center gap-4">
+        <ScoreRing score={score} size={140} className="flex-shrink-0 self-center" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <span className="font-[family:var(--font-secondary)] text-[22px] font-bold text-[#FAFAFA]">
@@ -85,7 +85,15 @@ export function RoastCard({
         </span>
       </div>
 
-      <p className="font-[family:var(--font-secondary)] text-[16px] leading-relaxed text-[#FAFAFA]">
+      <p
+        className="font-[family:var(--font-secondary)] text-[16px] leading-relaxed text-[#FAFAFA]"
+        style={{
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
         {roastQuote || "No roast quote available"}
       </p>
 
@@ -100,7 +108,7 @@ export function RoastCard({
 
       <CodeBlock
         code={codePreview}
-        language={language}
+        language={language === "auto" ? "javascript" : language}
         maxHeight="120px"
       />
 
