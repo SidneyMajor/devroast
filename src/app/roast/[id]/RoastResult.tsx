@@ -1,6 +1,7 @@
 "use client";
 
 import { CodeBlock } from "@/components/ui/code-block";
+import { DiffBlock, type DiffLine } from "@/components/ui/diff-block";
 import { ScoreRing } from "@/components/ui/score-ring";
 
 interface AnalysisItem {
@@ -21,8 +22,26 @@ interface RoastResultProps {
     roastQuote: string;
     lineCount: number;
     roastMode: boolean;
+    suggestedFix?: string | null;
   };
   analysisItems: AnalysisItem[];
+}
+
+function parseDiff(diffText: string | null | undefined): DiffLine[] {
+  if (!diffText) return [];
+  
+  return diffText
+    .split("\n")
+    .filter((line) => line.trim())
+    .map((line) => {
+      if (line.startsWith("- ") || line.startsWith("-")) {
+        return { diffType: "removed" as const, content: line.slice(2) || line.slice(1) };
+      }
+      if (line.startsWith("+ ") || line.startsWith("+")) {
+        return { diffType: "added" as const, content: line.slice(2) || line.slice(1) };
+      }
+      return { diffType: "context" as const, content: line.slice(2) || line };
+    });
 }
 
 function Badge({ label, variant }: { label: string; variant: "critical" | "warning" | "good" }) {
@@ -81,7 +100,7 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
             <span className="font-mono text-[14px] font-bold text-[#22C55E]">//</span>
             <h2 className="font-mono text-[14px] font-bold text-[#FAFAFA]">your_submission</h2>
           </div>
-          <CodeBlock code={roast.code} language={roast.language} />
+          <CodeBlock code={roast.code} language={roast.language} maxHeight="424px" />
         </div>
 
         <div className="h-px w-full bg-[#2A2A2A]" />
@@ -102,6 +121,19 @@ export function RoastResult({ roast, analysisItems }: RoastResultProps) {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="h-px w-full bg-[#2A2A2A]" />
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[14px] font-bold text-[#22C55E]">//</span>
+            <h2 className="font-mono text-[14px] font-bold text-[#FAFAFA]">suggested_fix</h2>
+          </div>
+          <DiffBlock 
+            lines={parseDiff(roast.suggestedFix)} 
+            filename={`${roast.language}: code → improved`}
+          />
         </div>
       </div>
     </div>
