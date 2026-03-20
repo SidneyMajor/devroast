@@ -65,3 +65,57 @@ export async function getLanguages() {
 
   return items;
 }
+
+export interface RoastListItem {
+  id: string;
+  code: string;
+  language: string;
+  score: number;
+  verdict: string;
+  roastQuote: string | null;
+  lineCount: number;
+  createdAt: Date;
+}
+
+export interface RoastsPaginatedResult {
+  items: RoastListItem[];
+  nextCursor: string | null;
+}
+
+export async function getRoastsPaginated(cursor: string | null, limit: number): Promise<RoastsPaginatedResult> {
+  const cursorCondition = cursor ? sql`${roasts.createdAt} < (SELECT createdAt FROM ${roasts} WHERE id = ${cursor})` : undefined;
+
+  const items = await db
+    .select({
+      id: roasts.id,
+      code: roasts.code,
+      language: roasts.language,
+      score: roasts.score,
+      verdict: roasts.verdict,
+      roastQuote: roasts.roastQuote,
+      lineCount: roasts.lineCount,
+      createdAt: roasts.createdAt,
+    })
+    .from(roasts)
+    .where(cursorCondition ? sql`${cursorCondition}` : undefined)
+    .orderBy(desc(roasts.createdAt))
+    .limit(limit + 1);
+
+  const hasMore = items.length > limit;
+  const resultItems = hasMore ? items.slice(0, limit) : items;
+  const nextCursor = hasMore ? resultItems[resultItems.length - 1]?.id ?? null : null;
+
+  return {
+    items: resultItems.map((r) => ({
+      id: r.id,
+      code: r.code,
+      language: r.language,
+      score: Number(r.score),
+      verdict: r.verdict,
+      roastQuote: r.roastQuote,
+      lineCount: r.lineCount,
+      createdAt: r.createdAt,
+    })),
+    nextCursor,
+  };
+}

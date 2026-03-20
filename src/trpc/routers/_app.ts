@@ -1,5 +1,6 @@
 import { createTRPCRouter, baseProcedure } from "../init";
-import { getLanguages, getStats, getLeaderboard } from "@/db/queries";
+import { getLanguages, getStats, getLeaderboard, getRoastsPaginated } from "@/db/queries";
+import { z } from "zod";
 
 export const appRouter = createTRPCRouter({
   stats: baseProcedure.query(async () => {
@@ -65,6 +66,28 @@ export const appRouter = createTRPCRouter({
   languagesList: baseProcedure.query(async () => {
     return getLanguages();
   }),
+
+  roastsList: baseProcedure
+    .input(z.object({
+      cursor: z.string().optional(),
+      limit: z.number().min(1).max(50).default(15),
+    }))
+    .query(async ({ input }) => {
+      const result = await getRoastsPaginated(input.cursor ?? null, input.limit);
+      return {
+        items: result.items.map((r) => ({
+          id: r.id,
+          code: r.code,
+          language: r.language,
+          score: r.score,
+          verdict: r.verdict,
+          roastQuote: r.roastQuote,
+          lineCount: r.lineCount,
+          createdAt: r.createdAt.toISOString(),
+        })),
+        nextCursor: result.nextCursor,
+      };
+    }),
 });
 
 export type AppRouter = typeof appRouter;

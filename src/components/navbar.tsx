@@ -7,9 +7,14 @@ export function Navbar() {
         <span className="font-mono text-xl font-bold text-[#10B981]">›</span>
         <span className="font-mono text-lg font-medium text-[#FAFAFA]">devroast</span>
       </Link>
-      <Link href="/leaderboard" className="font-mono text-[13px] text-[#6B7280] hover:text-[#FAFAFA] transition-colors">
-        leaderboard
-      </Link>
+      <div className="flex items-center gap-6">
+        <Link href="/roasts" className="font-mono text-[13px] text-[#6B7280] hover:text-[#FAFAFA] transition-colors">
+          roasts
+        </Link>
+        <Link href="/leaderboard" className="font-mono text-[13px] text-[#6B7280] hover:text-[#FAFAFA] transition-colors">
+          leaderboard
+        </Link>
+      </div>
     </nav>
   );
 }
