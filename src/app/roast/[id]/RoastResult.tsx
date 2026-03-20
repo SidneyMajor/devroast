@@ -77,13 +77,14 @@ function ShareButton({ roastId }: { roastId: string }) {
       await navigator.clipboard.writeText(ogImageUrl);
       setCopied(true);
       setShowPreview(true);
-      setTimeout(() => {
-        setCopied(false);
-        setShowPreview(false);
-      }, 3000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
+  };
+
+  const closePreview = () => {
+    setShowPreview(false);
+    setCopied(false);
   };
 
   return (
@@ -97,13 +98,30 @@ function ShareButton({ roastId }: { roastId: string }) {
       </button>
       
       {showPreview && (
-        <div className="absolute left-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-[#2A2A2A] shadow-xl">
-          <img
-            src={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/og?id=${roastId}`}
-            alt="OG Preview"
-            className="w-[300px] object-cover"
+        <>
+          <div 
+            className="fixed inset-0 z-50 bg-black/70"
+            onClick={closePreview}
           />
-        </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="overflow-hidden rounded-xl border border-[#2A2A2A] shadow-2xl">
+              <img
+                src={`${window.location.origin}/api/og?id=${roastId}`}
+                alt="OG Preview"
+                className="w-[600px] object-cover"
+              />
+              <div className="flex items-center justify-between bg-[#0A0A0A] p-3">
+                <span className="font-mono text-[12px] text-[#22C55E]">$ copied!</span>
+                <button 
+                  onClick={closePreview}
+                  className="font-mono text-[12px] text-[#6B7280] transition-colors hover:text-white"
+                >
+                  [×]
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
