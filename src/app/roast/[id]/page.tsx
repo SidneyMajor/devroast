@@ -25,6 +25,7 @@ export default async function RoastPage({ params }: { params: Promise<{ id: stri
         roastQuote: result.roast.roastQuote || "",
         lineCount: result.roast.lineCount,
         roastMode: result.roast.roastMode,
+        suggestedFix: result.roast.suggestedFix ?? null,
       }}
       analysisItems={result.analysisItems.map((item) => ({
         id: item.id,

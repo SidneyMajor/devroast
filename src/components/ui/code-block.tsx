@@ -1,6 +1,16 @@
-import { codeToHtml } from "shiki";
+"use client";
+
+import { Suspense, useState, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 import type { ComponentProps, ReactNode } from "react";
+
+async function highlightCode(code: string, language: string): Promise<string> {
+  const { codeToHtml } = await import("shiki");
+  return codeToHtml(code.trim(), {
+    lang: language,
+    theme: "vesper",
+  });
+}
 
 export interface CodeBlockRootProps extends ComponentProps<"div"> {
   children: ReactNode;
@@ -91,21 +101,76 @@ export interface CodeBlockProps {
   language?: string;
   showHeader?: boolean;
   filename?: string;
+  maxHeight?: string;
 }
 
-export async function CodeBlock({ code, language = "javascript", showHeader = false, filename }: CodeBlockProps) {
-  const highlighted = await codeToHtml(code.trim(), {
-    lang: language,
-    theme: "vesper",
-  });
+function CodeBlockContentInner({ code, language }: { code: string; language: string }) {
+  const [highlighted, setHighlighted] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    highlightCode(code, language).then((html) => {
+      setHighlighted(html);
+      setLoading(false);
+    });
+  }, [code, language]);
+
+  if (loading) {
+    return (
+      <CodeBlockContent>
+        <pre className="font-mono text-[13px] text-[#6B7280]">Loading...</pre>
+      </CodeBlockContent>
+    );
+  }
 
   return (
-    <CodeBlockRoot>
+    <CodeBlockContent dangerouslySetInnerHTML={{ __html: highlighted }} />
+  );
+}
+
+export function CodeBlock({ 
+  code, 
+  language = "javascript", 
+  showHeader = false, 
+  filename,
+  maxHeight 
+}: CodeBlockProps) {
+  return (
+    <CodeBlockRoot className={maxHeight ? "overflow-hidden" : undefined}>
       {showHeader && <CodeBlockHeader filename={filename} />}
-      <div className="flex">
+      <div className="flex" style={maxHeight ? { maxHeight } : undefined}>
         <CodeBlockLineNumbers lineCount={code.trim().split("\n").length} />
-        <CodeBlockContent dangerouslySetInnerHTML={{ __html: highlighted }} />
+        <div className="code-block-scroll flex-1 overflow-auto">
+          <Suspense fallback={
+            <CodeBlockContent>
+              <pre className="font-mono text-[13px] text-[#6B7280]">Loading...</pre>
+            </CodeBlockContent>
+          }>
+            <CodeBlockContentInner code={code} language={language} />
+          </Suspense>
+        </div>
       </div>
+      <style jsx>{`
+        .code-block-scroll {
+          scrollbar-color: #2a2a2a #0f0f0d;
+          scrollbar-width: thin;
+        }
+        .code-block-scroll::-webkit-scrollbar {
+          width: 10px;
+          height: 10px;
+        }
+        .code-block-scroll::-webkit-scrollbar-track {
+          background: #0f0f0d;
+        }
+        .code-block-scroll::-webkit-scrollbar-thumb {
+          background: #2a2a2a;
+          border-radius: 9999px;
+          border: 2px solid #0f0f0d;
+        }
+        .code-block-scroll::-webkit-scrollbar-thumb:hover {
+          background: #3f3f46;
+        }
+      `}</style>
     </CodeBlockRoot>
   );
 }

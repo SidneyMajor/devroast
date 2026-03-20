@@ -26,23 +26,27 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error submitting code:", error);
 
-    if (error instanceof Error) {
-      if (error.message.includes("timeout")) {
-        return NextResponse.json(
-          { error: "Analysis took too long. Please try again." },
-          { status: 504 }
-        );
-      }
-      if (error.message.includes("API key") || error.message.includes("auth")) {
-        return NextResponse.json(
-          { error: "AI service configuration error." },
-          { status: 500 }
-        );
-      }
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    if (errorMessage.includes("timeout")) {
+      return NextResponse.json(
+        { error: "Analysis took too long. Please try again." },
+        { status: 504 }
+      );
+    }
+    if (errorMessage.includes("API key") || errorMessage.includes("auth")) {
+      return NextResponse.json(
+        { error: "AI service configuration error." },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
-      { error: "Failed to analyze code. Please try again." },
+      { 
+        error: "Failed to analyze code. Please try again.",
+        details: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
