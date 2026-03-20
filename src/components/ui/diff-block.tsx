@@ -1,6 +1,5 @@
-"use client";
-
 import { twMerge } from "tailwind-merge";
+import { highlightDiffLines } from "@/lib/shiki-highlighter";
 
 export interface DiffLine {
   diffType: "added" | "removed" | "context";
@@ -13,41 +12,67 @@ export interface DiffBlockProps {
   language?: string;
 }
 
-function DiffLineComponent({ line }: { line: DiffLine }) {
-  const styles = {
-    added: {
-      bg: "bg-[#0D3320]",
-      border: "border-[#238636]",
-      text: "text-[#9CDCFE]",
-    },
-    removed: {
-      bg: "bg-[#3D1F1F]",
-      border: "border-[#DA3633]",
-      text: "text-[#F97583]",
-    },
-    context: {
-      bg: "bg-transparent",
-      border: "border-transparent",
-      text: "text-[#E1E4E8]",
-    },
-  };
+const diffStyles = {
+  added: {
+    bg: "bg-[#0D3320]",
+    border: "border-[#238636]",
+    prefix: "text-[#238636]",
+  },
+  removed: {
+    bg: "bg-[#3D1F1F]",
+    border: "border-[#DA3633]",
+    prefix: "text-[#DA3633]",
+  },
+  context: {
+    bg: "bg-transparent",
+    border: "border-transparent",
+    prefix: "text-[#6E7681]",
+  },
+};
 
-  const style = styles[line.diffType];
+async function DiffLineComponent({
+  line,
+  lineNumber,
+}: {
+  line: { diffType: "added" | "removed" | "context"; html: string };
+  lineNumber: number;
+}) {
+  const styles = diffStyles[line.diffType];
+  const prefix = line.diffType === "added" ? "+" : line.diffType === "removed" ? "-" : " ";
 
   return (
-    <div className={`flex items-center gap-3 border-l-2 px-3 py-2 ${style.bg} ${style.border}`}>
-      <span className={`w-5 text-left font-mono text-[12px] font-bold ${style.text}`}>
-        {line.diffType === "added" ? "+" : line.diffType === "removed" ? "-" : " "}
+    <div
+      className={twMerge(
+        "flex items-center gap-3 border-l-2 px-3 py-1.5",
+        styles.bg,
+        styles.border
+      )}
+    >
+      <span className="select-none w-5 text-left font-mono text-[12px] font-bold text-[#6E7681]">
+        {lineNumber}
       </span>
-      <pre className={`flex-1 font-mono text-[13px] ${style.text} whitespace-pre`}>
-        {line.content}
-      </pre>
+      <span className={twMerge("select-none w-4 font-mono text-[12px] font-bold", styles.prefix)}>
+        {prefix}
+      </span>
+      <span
+        className="flex-1 font-mono text-[13px] text-[#E1E4E8] whitespace-pre"
+        dangerouslySetInnerHTML={{ __html: line.html }}
+      />
     </div>
   );
 }
 
-export function DiffBlock({ lines, filename, language = "diff" }: DiffBlockProps) {
+export async function DiffBlock({
+  lines,
+  filename,
+  language = "javascript",
+}: DiffBlockProps) {
   const displayFilename = filename || "suggested_fix.diff";
+
+  const highlightedLines =
+    lines.length > 0
+      ? await highlightDiffLines(lines, language)
+      : [];
 
   return (
     <div className="flex flex-col rounded-md border border-[#30363D] bg-[#0D1117] overflow-hidden">
@@ -60,20 +85,25 @@ export function DiffBlock({ lines, filename, language = "diff" }: DiffBlockProps
       </div>
       <div className="flex" style={{ maxHeight: "424px" }}>
         <div className="flex flex-col border-r border-[#30363D] bg-[#161B22] py-3 pr-3 pl-4 text-right">
-          {lines.length > 0 ? (
-            lines.map((_, index) => (
-              <span key={index} className="font-mono text-[12px] leading-[1.5] text-[#6E7681]">
+          {highlightedLines.length > 0 ? (
+            highlightedLines.map((_, index) => (
+              <span
+                key={index}
+                className="select-none font-mono text-[12px] leading-[1.5] text-[#6E7681]"
+              >
                 {index + 1}
               </span>
             ))
           ) : (
-            <span className="font-mono text-[12px] leading-[1.5] text-[#6E7681]">1</span>
+            <span className="select-none font-mono text-[12px] leading-[1.5] text-[#6E7681]">
+              1
+            </span>
           )}
         </div>
         <div className="diff-block-scroll flex flex-1 flex-col overflow-auto">
-          {lines.length > 0 ? (
-            lines.map((line, index) => (
-              <DiffLineComponent key={index} line={line} />
+          {highlightedLines.length > 0 ? (
+            highlightedLines.map((line, index) => (
+              <DiffLineComponent key={index} line={line} lineNumber={index + 1} />
             ))
           ) : (
             <div className="px-4 py-3 text-center font-mono text-[12px] text-[#8B949E]">
